@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workshop Match - Activity 1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #f5c842;
+    font-size: 1.6em;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: #aaa;
+    font-size: 0.9em;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 10px;
+    padding: 10px 22px;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .stat-label {
+    font-size: 0.75em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-value {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #f5c842;
+  }
+
+  .stat-value.timer-warning { color: #e74c3c; }
+
+  .game-area {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .column {
+    flex: 1;
+    min-width: 260px;
+    max-width: 340px;
+  }
+
+  .column-title {
+    text-align: center;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0f3460;
+  }
+
+  .draggable-item {
+    background: #16213e;
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    cursor: grab;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .draggable-item:hover { border-color: #f5c842; background: #1a2744; }
+  .draggable-item:active { cursor: grabbing; }
+  .draggable-item.dragging { opacity: 0.4; transform: scale(0.95); }
+
+  .draggable-item.matched {
+    background: #0a3d0a;
+    border-color: #27ae60;
+    color: #27ae60;
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .drop-target {
+    background: #0d1b30;
+    border: 2px dashed #0f3460;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    min-height: 50px;
+    text-align: center;
+    font-size: 1em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .drop-target.drag-over {
+    border-color: #f5c842;
+    background: #1a2744;
+    border-style: solid;
+  }
+
+  .drop-target.correct {
+    background: #0a3d0a;
+    border-color: #27ae60;
+    border-style: solid;
+    color: #27ae60;
+    font-weight: 600;
+  }
+
+  .drop-target.incorrect-flash {
+    animation: shake 0.4s ease;
+    border-color: #e74c3c;
+    background: #3d0a0a;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .btn {
+    background: #f5c842;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+  }
+
+  .btn:hover { background: #e0b530; }
+
+  .result-msg {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: 600;
+    min-height: 40px;
+  }
+
+  .result-msg.win { color: #27ae60; }
+  .result-msg.lose { color: #e74c3c; }
+
+  .instructions {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    max-width: 700px;
+    width: 100%;
+    font-size: 0.85em;
+    color: #bbb;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 600px) {
+    .game-area { flex-direction: column; align-items: center; }
+    .column { min-width: 100%; max-width: 100%; }
+    h1 { font-size: 1.3em; }
+    .stats-bar { gap: 12px; }
+    .stat { padding: 8px 16px; min-width: 90px; }
+    .stat-value { font-size: 1.4em; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Workshop Match</h1>
+<p class="subtitle">Activity 1 &mdash; The Workshop English Detective</p>
+
+<div class="instructions">
+  Drag each English word on the left and drop it on the correct Spanish translation on the right. You have 3 minutes.
+  <br>Arrastra cada palabra en ingles y sueltala sobre su traduccion correcta en espanol. Tienes 3 minutos.
+</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Score</div>
+    <div class="stat-value" id="score">0 / 10</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Time</div>
+    <div class="stat-value" id="timer">3:00</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Attempts</div>
+    <div class="stat-value" id="attempts">0</div>
+  </div>
+</div>
+
+<div class="game-area">
+  <div class="column">
+    <div class="column-title">English</div>
+    <div id="english-col"></div>
+  </div>
+  <div class="column">
+    <div class="column-title">Spanish</div>
+    <div id="spanish-col"></div>
+  </div>
+</div>
+
+<div class="result-msg" id="result-msg"></div>
+<button class="btn" id="restart-btn" style="display:none;">Play Again</button>
+
+<script>
+const WORDS = [
+  { en: "Screwdriver", es: "Destornillador" },
+  { en: "Pliers", es: "Alicates" },
+  { en: "Hammer", es: "Martillo" },
+  { en: "Multimeter", es: "Multimetro" },
+  { en: "Wire Stripper", es: "Pelacables" },
+  { en: "Cable Cutter", es: "Cortacables" },
+  { en: "Light Switch", es: "Interruptor" },
+  { en: "Fuse", es: "Fusible" },
+  { en: "Circuit Breaker", es: "Disyuntor" },
+  { en: "Safety Goggles", es: "Gafas de seguridad" }
+];
+
+let score = 0;
+let attempts = 0;
+let timeLeft = 180;
+let timerInterval = null;
+let gameOver = false;
+let draggedItem = null;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.15;
+
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523, ctx.currentTime);
+      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } else {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch (e) {}
+}
+
+function playWinSound() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [523, 587, 659, 784, 880, 1047];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.12;
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.25);
+    });
+  } catch (e) {}
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function updateStats() {
+  document.getElementById('score').textContent = score + ' / 10';
+  document.getElementById('attempts').textContent = attempts;
+}
+
+function updateTimer() {
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+  const el = document.getElementById('timer');
+  el.textContent = min + ':' + String(sec).padStart(2, '0');
+  if (timeLeft <= 30) el.classList.add('timer-warning');
+  else el.classList.remove('timer-warning');
+}
+
+function endGame(won) {
+  gameOver = true;
+  clearInterval(timerInterval);
+  const msg = document.getElementById('result-msg');
+  if (won) {
+    msg.className = 'result-msg win';
+    const min = Math.floor((180 - timeLeft) / 60);
+    const sec = (180 - timeLeft) % 60;
+    msg.textContent = 'Excellent! All matched in ' + min + ':' + String(sec).padStart(2, '0') + ' with ' + attempts + ' attempts.';
+    playWinSound();
+  } else {
+    msg.className = 'result-msg lose';
+    msg.textContent = 'Time is up! You matched ' + score + ' of 10. Try again!';
+    playSound('incorrect');
+  }
+  document.getElementById('restart-btn').style.display = 'inline-block';
+
+  document.querySelectorAll('.draggable-item:not(.matched)').forEach(el => {
+    el.draggable = false;
+    el.style.opacity = '0.4';
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) endGame(false);
+  }, 1000);
+}
+
+/* --- Touch support --- */
+let touchClone = null;
+let touchOffsetX = 0;
+let touchOffsetY = 0;
+
+function handleTouchStart(e) {
+  if (gameOver) return;
+  const item = e.target.closest('.draggable-item');
+  if (!item || item.classList.contains('matched')) return;
+
+  draggedItem = item;
+  item.classList.add('dragging');
+
+  const rect = item.getBoundingClientRect();
+  touchOffsetX = e.touches[0].clientX - rect.left;
+  touchOffsetY = e.touches[0].clientY - rect.top;
+
+  touchClone = item.cloneNode(true);
+  touchClone.style.position = 'fixed';
+  touchClone.style.width = rect.width + 'px';
+  touchClone.style.zIndex = '9999';
+  touchClone.style.pointerEvents = 'none';
+  touchClone.style.opacity = '0.85';
+  touchClone.style.left = (e.touches[0].clientX - touchOffsetX) + 'px';
+  touchClone.style.top = (e.touches[0].clientY - touchOffsetY) + 'px';
+  document.body.appendChild(touchClone);
+
+  e.preventDefault();
+}
+
+function handleTouchMove(e) {
+  if (!touchClone) return;
+  touchClone.style.left = (e.touches[0].clientX - touchOffsetX) + 'px';
+  touchClone.style.top = (e.touches[0].clientY - touchOffsetY) + 'px';
+
+  document.querySelectorAll('.drop-target').forEach(dt => dt.classList.remove('drag-over'));
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  if (el) {
+    const dt = el.closest('.drop-target');
+    if (dt && !dt.classList.contains('correct')) dt.classList.add('drag-over');
+  }
+  e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+  if (!touchClone || !draggedItem) return;
+
+  document.querySelectorAll('.drop-target').forEach(dt => dt.classList.remove('drag-over'));
+
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (el) {
+    const target = el.closest('.drop-target');
+    if (target && !target.classList.contains('correct')) {
+      handleDrop(target);
+    }
+  }
+
+  draggedItem.classList.remove('dragging');
+  touchClone.remove();
+  touchClone = null;
+  draggedItem = null;
+}
+
+function handleDrop(target) {
+  if (!draggedItem) return;
+  const enWord = draggedItem.dataset.en;
+  const esWord = target.dataset.es;
+  attempts++;
+
+  const pair = WORDS.find(w => w.en === enWord);
+  if (pair && pair.es === esWord) {
+    score++;
+    target.classList.add('correct');
+    target.textContent = pair.en + ' = ' + pair.es;
+    draggedItem.classList.add('matched');
+    draggedItem.draggable = false;
+    playSound('correct');
+    if (score === 10) endGame(true);
+  } else {
+    target.classList.add('incorrect-flash');
+    playSound('incorrect');
+    setTimeout(() => target.classList.remove('incorrect-flash'), 400);
+  }
+  updateStats();
+}
+
+function initGame() {
+  score = 0;
+  attempts = 0;
+  timeLeft = 180;
+  gameOver = false;
+  draggedItem = null;
+  clearInterval(timerInterval);
+
+  document.getElementById('result-msg').textContent = '';
+  document.getElementById('result-msg').className = 'result-msg';
+  document.getElementById('restart-btn').style.display = 'none';
+  document.getElementById('timer').classList.remove('timer-warning');
+
+  const enCol = document.getElementById('english-col');
+  const esCol = document.getElementById('spanish-col');
+  enCol.innerHTML = '';
+  esCol.innerHTML = '';
+
+  const shuffledEN = shuffle(WORDS);
+  const shuffledES = shuffle(WORDS);
+
+  shuffledEN.forEach(w => {
+    const div = document.createElement('div');
+    div.className = 'draggable-item';
+    div.draggable = true;
+    div.textContent = w.en;
+    div.dataset.en = w.en;
+
+    div.addEventListener('dragstart', e => {
+      if (gameOver) { e.preventDefault(); return; }
+      draggedItem = div;
+      div.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => {
+      div.classList.remove('dragging');
+      draggedItem = null;
+    });
+
+    div.addEventListener('touchstart', handleTouchStart, { passive: false });
+    enCol.appendChild(div);
+  });
+
+  shuffledES.forEach(w => {
+    const div = document.createElement('div');
+    div.className = 'drop-target';
+    div.textContent = w.es;
+    div.dataset.es = w.es;
+
+    div.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!div.classList.contains('correct')) div.classList.add('drag-over');
+    });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      if (div.classList.contains('correct')) return;
+      handleDrop(div);
+    });
+
+    esCol.appendChild(div);
+  });
+
+  document.addEventListener('touchmove', handleTouchMove, { passive: false });
+  document.addEventListener('touchend', handleTouchEnd);
+
+  updateStats();
+  updateTimer();
+  startTimer();
+}
+
+document.getElementById('restart-btn').addEventListener('click', initGame);
+initGame();
+</script>
+</body>
+</html>
