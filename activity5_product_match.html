@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Match - Activity 5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+  }
+  h1 { color: #f5c842; font-size: 1.5em; margin-bottom: 4px; text-align: center; }
+  .subtitle { color: #aaa; font-size: 0.85em; margin-bottom: 14px; text-align: center; }
+  .instructions {
+    background: #16213e; border: 1px solid #0f3460; border-radius: 10px;
+    padding: 12px 18px; margin-bottom: 16px; max-width: 750px; width: 100%;
+    font-size: 0.83em; color: #bbb; text-align: center; line-height: 1.4;
+  }
+  .stats-bar { display: flex; gap: 20px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat { background: #16213e; border: 1px solid #0f3460; border-radius: 10px; padding: 8px 18px; text-align: center; min-width: 100px; }
+  .stat-label { font-size: 0.7em; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 1.6em; font-weight: 700; color: #f5c842; }
+
+  .quiz-container { max-width: 700px; width: 100%; }
+
+  .question-card {
+    background: #16213e; border: 2px solid #0f3460; border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; text-align: center;
+  }
+  .q-number { color: #888; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .q-description { color: #e0e0e0; font-size: 1em; line-height: 1.5; margin-bottom: 6px; font-style: italic; }
+  .q-specs { color: #f5c842; font-size: 0.85em; margin-bottom: 4px; }
+  .q-brand { color: #888; font-size: 0.8em; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+
+  .option-btn {
+    background: #0d1b30; border: 2px solid #0f3460; border-radius: 8px;
+    padding: 14px 12px; cursor: pointer; font-size: 0.9em; font-weight: 600;
+    color: #d4d4d4; text-align: center; transition: all 0.2s; line-height: 1.2;
+  }
+  .option-btn:hover { border-color: #f5c842; background: #1a2744; }
+  .option-btn.correct { background: #0a3d0a; border-color: #27ae60; color: #27ae60; }
+  .option-btn.wrong { background: #3d0a0a; border-color: #e74c3c; color: #e74c3c; }
+  .option-btn.reveal { border-color: #27ae60; color: #27ae60; }
+  .option-btn.disabled { pointer-events: none; opacity: 0.6; }
+
+  .option-btn .opt-en { display: block; }
+  .option-btn .opt-es { display: block; font-size: 0.78em; color: #f5c842; font-style: italic; opacity: 0.7; margin-top: 3px; }
+
+  .feedback { text-align: center; min-height: 28px; font-weight: 600; font-size: 0.95em; margin-bottom: 12px; }
+  .feedback.correct-fb { color: #27ae60; }
+  .feedback.wrong-fb { color: #e74c3c; }
+
+  .btn {
+    background: #f5c842; color: #1a1a2e; border: none; border-radius: 8px;
+    padding: 11px 26px; font-size: 0.95em; font-weight: 700; cursor: pointer;
+    transition: background 0.2s; display: block; margin: 0 auto;
+  }
+  .btn:hover { background: #e0b530; }
+
+  .result-msg { text-align: center; margin-top: 16px; font-size: 1.1em; font-weight: 600; }
+  .result-msg.win { color: #27ae60; }
+  .result-msg.partial { color: #e67e22; }
+
+  @media (max-width: 500px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .option-btn { padding: 12px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Product Match</h1>
+<p class="subtitle">Activity 5 &mdash; Global Brands, Local Workshop</p>
+
+<div class="instructions">
+  Read each product description and choose the correct tool. The Spanish translation helps!
+  <br>Lee cada descripcion de producto y elige la herramienta correcta. La traduccion en espanol te ayuda.
+</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Score</div>
+    <div class="stat-value" id="score">0 / 8</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Question</div>
+    <div class="stat-value" id="q-num">1 / 8</div>
+  </div>
+</div>
+
+<div class="quiz-container" id="quiz-area"></div>
+<div class="result-msg" id="result-msg"></div>
+
+<script>
+const QUESTIONS = [
+  {
+    desc: "Professional insulated tool for driving and removing screws. VDE certified for work up to 1000V.",
+    specs: "Blade: Chrome Vanadium Steel | Handle: Ergonomic grip",
+    brand: "Wera / Wiha",
+    answer: "Insulated Screwdriver",
+    answerES: "Destornillador aislado",
+    options: [
+      { en: "Insulated Screwdriver", es: "Destornillador aislado" },
+      { en: "Wire Stripper", es: "Pelacables" },
+      { en: "Voltage Tester", es: "Comprobador de tension" },
+      { en: "Cable Cutter", es: "Cortacables" }
+    ]
+  },
+  {
+    desc: "Portable testing device that measures voltage, current and resistance. Essential for every electrician's toolkit.",
+    specs: "Display: LCD backlit | Range: Auto-ranging | Safety: CAT III 600V",
+    brand: "Fluke / Klein Tools",
+    answer: "Digital Multimeter",
+    answerES: "Multimetro digital",
+    options: [
+      { en: "Spirit Level", es: "Nivel de burbuja" },
+      { en: "Digital Multimeter", es: "Multimetro digital" },
+      { en: "Crimper", es: "Grimpadora" },
+      { en: "Circuit Breaker", es: "Disyuntor" }
+    ]
+  },
+  {
+    desc: "Heavy-duty cutting tool designed to cut copper and aluminium conductors cleanly without crushing.",
+    specs: "Capacity: Up to 60mm2 | Handles: Insulated | Mechanism: Ratchet",
+    brand: "Knipex",
+    answer: "Cable Cutter",
+    answerES: "Cortacables",
+    options: [
+      { en: "Hacksaw", es: "Sierra de arco" },
+      { en: "Pliers", es: "Alicates" },
+      { en: "Cable Cutter", es: "Cortacables" },
+      { en: "Hammer", es: "Martillo" }
+    ]
+  },
+  {
+    desc: "Automatic protection device that interrupts the circuit when it detects an overload or short circuit.",
+    specs: "Rating: 16A / 20A / 32A | Curve: B or C | Poles: 1P / 2P",
+    brand: "Schneider Electric / ABB",
+    answer: "Circuit Breaker",
+    answerES: "Disyuntor",
+    options: [
+      { en: "Fuse", es: "Fusible" },
+      { en: "Light Switch", es: "Interruptor" },
+      { en: "Connector", es: "Conector" },
+      { en: "Circuit Breaker", es: "Disyuntor" }
+    ]
+  },
+  {
+    desc: "Precision tool that removes the outer insulation from electrical cables without damaging the conductor inside.",
+    specs: "Range: 0.5 - 6 mm2 | Self-adjusting | Spring-loaded",
+    brand: "Jokari / Knipex",
+    answer: "Wire Stripper",
+    answerES: "Pelacables",
+    options: [
+      { en: "Wire Stripper", es: "Pelacables" },
+      { en: "Soldering Iron", es: "Soldador" },
+      { en: "Drill Machine", es: "Taladro" },
+      { en: "Measuring Tape", es: "Cinta metrica" }
+    ]
+  },
+  {
+    desc: "Rigid or flexible tube that protects and routes electrical cables through walls, ceilings and floors.",
+    specs: "Material: PVC or Metal | Diameter: 16mm / 20mm / 25mm",
+    brand: "Schneider / Legrand",
+    answer: "Conduit",
+    answerES: "Tubo / Conducto",
+    options: [
+      { en: "Trunking", es: "Canaleta" },
+      { en: "Electrical Box", es: "Caja electrica" },
+      { en: "Conduit", es: "Tubo / Conducto" },
+      { en: "Light Switch", es: "Interruptor" }
+    ]
+  },
+  {
+    desc: "Personal protection equipment worn over the eyes to prevent injuries from sparks, debris and arc flash.",
+    specs: "Standard: EN 166 | Lens: Polycarbonate | Anti-fog coating",
+    brand: "3M / Bolle",
+    answer: "Safety Goggles",
+    answerES: "Gafas de seguridad",
+    options: [
+      { en: "Hard Hat", es: "Casco" },
+      { en: "Safety Goggles", es: "Gafas de seguridad" },
+      { en: "Insulated Gloves", es: "Guantes aislados" },
+      { en: "High-Vis Vest", es: "Chaleco reflectante" }
+    ]
+  },
+  {
+    desc: "Cordless power tool used to make holes in walls, wood and metal for cable routing and fixture mounting.",
+    specs: "Battery: 18V Li-ion | Chuck: 13mm | Torque: 60Nm",
+    brand: "DeWalt / Makita / Bosch",
+    answer: "Drill Machine",
+    answerES: "Taladro",
+    options: [
+      { en: "Hammer", es: "Martillo" },
+      { en: "Crimper", es: "Grimpadora" },
+      { en: "Soldering Iron", es: "Soldador" },
+      { en: "Drill Machine", es: "Taladro" }
+    ]
+  }
+];
+
+let currentQ = 0;
+let scoreCount = 0;
+let answered = false;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.15;
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523, ctx.currentTime);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+    } else {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.25);
+    }
+  } catch(e) {}
+}
+
+function playWin() {
+  try {
+    const ctx = getAudioCtx();
+    [523,587,659,784,880,1047].forEach((f,i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=f;
+      g.gain.value=0.12; g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.25);
+      o.start(ctx.currentTime+i*0.12); o.stop(ctx.currentTime+i*0.12+0.25);
+    });
+  } catch(e) {}
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function updateStats() {
+  document.getElementById('score').textContent = scoreCount + ' / ' + QUESTIONS.length;
+  document.getElementById('q-num').textContent = (currentQ + 1) + ' / ' + QUESTIONS.length;
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = QUESTIONS[currentQ];
+  const area = document.getElementById('quiz-area');
+  const shuffledOpts = shuffle(q.options);
+
+  let html = '<div class="question-card">' +
+    '<div class="q-number">Product description ' + (currentQ + 1) + ' of ' + QUESTIONS.length + '</div>' +
+    '<div class="q-description">"' + q.desc + '"</div>' +
+    '<div class="q-specs">' + q.specs + '</div>' +
+    '<div class="q-brand">Brands: ' + q.brand + '</div>' +
+    '</div>' +
+    '<div class="options-grid" id="options">';
+
+  shuffledOpts.forEach((opt, i) => {
+    html += '<div class="option-btn" data-answer="' + opt.en + '" onclick="selectAnswer(this)">' +
+      '<span class="opt-en">' + opt.en + '</span>' +
+      '<span class="opt-es">' + opt.es + '</span></div>';
+  });
+
+  html += '</div><div class="feedback" id="feedback"></div>';
+  area.innerHTML = html;
+  document.getElementById('result-msg').textContent = '';
+  updateStats();
+}
+
+function selectAnswer(btn) {
+  if (answered) return;
+  answered = true;
+  const q = QUESTIONS[currentQ];
+  const selected = btn.dataset.answer;
+  const allBtns = document.querySelectorAll('.option-btn');
+
+  allBtns.forEach(b => {
+    b.classList.add('disabled');
+    if (b.dataset.answer === q.answer) b.classList.add('reveal');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (selected === q.answer) {
+    scoreCount++;
+    btn.classList.add('correct');
+    fb.className = 'feedback correct-fb';
+    fb.textContent = 'Correct! ' + q.answer + ' = ' + q.answerES;
+    playSound('correct');
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback wrong-fb';
+    fb.textContent = 'Incorrect. The answer is: ' + q.answer + ' (' + q.answerES + ')';
+    playSound('wrong');
+  }
+
+  updateStats();
+
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < QUESTIONS.length) {
+      renderQuestion();
+    } else {
+      showResults();
+    }
+  }, 2200);
+}
+
+function showResults() {
+  const area = document.getElementById('quiz-area');
+  const pct = Math.round((scoreCount / QUESTIONS.length) * 100);
+  let grade = pct >= 90 ? 'Excellent!' : pct >= 70 ? 'Good job!' : pct >= 50 ? 'Keep practising!' : 'Review the vocabulary and try again!';
+  if (pct >= 70) playWin();
+
+  area.innerHTML = '<div class="question-card">' +
+    '<div class="q-number">Final results</div>' +
+    '<div style="font-size:2.5em;font-weight:700;color:#f5c842;margin:10px 0">' + scoreCount + ' / ' + QUESTIONS.length + '</div>' +
+    '<div style="font-size:1.1em;color:#bbb;margin-bottom:6px">' + pct + '% correct</div>' +
+    '<div style="font-size:1.2em;color:' + (pct >= 70 ? '#27ae60' : '#e67e22') + ';font-weight:600">' + grade + '</div>' +
+    '</div>' +
+    '<button class="btn" onclick="resetQuiz()">Play Again</button>';
+}
+
+function resetQuiz() {
+  currentQ = 0;
+  scoreCount = 0;
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
